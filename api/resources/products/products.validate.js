@@ -1,4 +1,5 @@
 const Joi = require('joi')
+const log = require('../../../utils/logger')
 
 const blueprintProduct = Joi.object({
   title: Joi.string().max(100).required(),
@@ -14,6 +15,8 @@ module.exports = (req, res, next) => {
     let validationErrors = result.error.details.reduce((acc, error) => {
       return acc + `[${error.message}]`
     }, "")
+
+    log.warn('El siguiente producto no pasó la validación: ', req.body, validationErrors)
     res.status(404).send(`El producto en el body debe especificar titulo, precio y moneda.
       Errores en tu request: ${validationErrors}`)
   }

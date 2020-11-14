@@ -2,6 +2,7 @@ const express = require('express')
 const _ = require('underscore')
 const uuidv4 = require('uuid/v4')
 const validateProduct = require('./products.validate')
+const log = require('../../../utils/logger')
 
 const products = require('../../../database').products
 const productsRouter = express.Router()
@@ -12,12 +13,9 @@ productsRouter.get('/', (req, res) => {
 
 productsRouter.post('/', validateProduct, (req, res) => {
   let newProduct = req.body
-  if (!newProduct.title || !newProduct.price || !newProduct.currency) {
-    // Bad request
-    return res.status(400).send("Tu producto debe especificar un título, precio y moneda.")
-  }
   newProduct.id = uuidv4()
   products.push(newProduct)
+  log.info("Producto agregado a la colección de productos", newProduct)
   return res.status(201).json(newProduct)
 })
 
@@ -39,6 +37,7 @@ productsRouter.put('/:id', validateProduct, (req, res) => {
   if (index !== -1) {
     product.id = id
     products[index] = product
+    log.info(`Producto con id [${id}] reemplazado con nuevo producto`, product)
     return res.status(200).json(product)
   } else {
     return res.status(404).send(`El producto con id [${id}] no existe.`)
@@ -48,6 +47,9 @@ productsRouter.put('/:id', validateProduct, (req, res) => {
 productsRouter.delete('/:id', (req, res) => {
   let index = _.findIndex(products, product => product.id === req.params.id)
   if (index == -1) {
+    log.warn(
+      `Producto con id [${req.params.id}] no existe. Nada que borrar`
+    )
     return res.status(404).send(`Producto con id [${req.params.id}] no existe. Nada que borrar.`)
   }
   let productRemoved = products.splice(index, 1)
