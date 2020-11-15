@@ -1,10 +1,11 @@
 const express = require('express')
 const _ = require('underscore')
 const uuidv4 = require('uuid/v4')
+
 const validateProduct = require('./products.validate')
 const log = require('../../../utils/logger')
-
 const products = require('../../../database').products
+
 const productsRouter = express.Router()
 
 productsRouter.get('/', (req, res) => {

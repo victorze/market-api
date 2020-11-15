@@ -4,6 +4,9 @@ const products = [
   { id: '3', title: 'Microfono blue', price: 100, currency: 'USD' },
 ]
 
+const users = []
+
 module.exports = {
-  products
+  products,
+  users,
 }
