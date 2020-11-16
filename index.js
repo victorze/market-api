@@ -23,11 +23,6 @@ app.use(passport.initialize())
 app.use('/products', productsRouter)
 app.use('/users', usersRouter)
 
-app.get('/', passport.authenticate('jwt', { session: false }), (req, res) => {
-  log.info(req.user)
-  res.send('Api de mi aplicacion')
-})
-
 app.listen(3000, () => {
   log.info('Escuchando en el puerto 3000')
 })
