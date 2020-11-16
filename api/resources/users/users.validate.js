@@ -24,7 +24,6 @@ const blueprintUserLogin = Joi.object({
 
 const validateLogin = (req, res, next) => {
   const result = blueprintUserLogin.validate(req.body, { abortEarly: false, convert: false })
-  console.log(result)
   if (!result.error) {
     next()
   } else {

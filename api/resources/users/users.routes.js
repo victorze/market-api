@@ -43,7 +43,7 @@ usersRouter.post('/', validateUser, (req, res) => {
   })
 })
 
-usersRouter.post('/login', (req, res) => {
+usersRouter.post('/login', validateLogin, (req, res) => {
   user = req.body
   let index = _.findIndex(users, u => u.username === user.username)
 

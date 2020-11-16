@@ -2,23 +2,26 @@ const _ = require('underscore')
 const log = require('../../utils/logger')
 const users = require('../../database').users
 const bcrypt = require('bcrypt')
+const passportJWT = require('passport-jwt')
 
-module.exports = (username, password, done) => {
-  let index = _.findIndex(users, user => user.username = username)
+const jwtOptions = {
+  secretOrKey: 'secret',
+  jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken()
+}
+
+module.exports = new passportJWT.Strategy(jwtOptions, (jwtPayload, next) => {
+  let index = _.findIndex(users, user => user.id === jwtPayload.id)
 
   if (index === -1) {
-    log.info(`Usuario ${username} no pudo ser autenticado`)
-    return done(null, false)
-  }
+    log.info(`JWT token no es válido. Usuario con id ${jwtPayload.id} no existe.`)
+    next(null, false)
+  } else {
+    log.info(`Usuario ${users[index].username} suministró un token válido. Autenticación completada.`)
 
-  let hashedPassword = users[index].password
-  bcrypt.compare(password, hashedPassword, (err, matchPassword) => {
-    if (matchPassword) {
-      log.info(`Usuario ${username} completó autenticación`)
-      done(null, true)
-    } else {
-      log.info(`Usuario ${username} no completó autenticación. Contraseña incorrecta`)
-      done(null, false)
-    }
-  })
-}
+    // El objeto (segundo argumento) se agrega a req.user
+    next(null, {
+      username: users[index].username,
+      id: users[index].id,
+    })
+  }
+})
