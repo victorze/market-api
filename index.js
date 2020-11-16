@@ -5,6 +5,7 @@ const usersRouter = require('./api/resources/users/users.routes')
 const morgan = require('morgan')
 const log = require('./utils/logger')
 const authJWT = require('./api/libs/auth')
+const config = require('./config')
 
 const passport = require('passport')
 passport.use(authJWT)
@@ -23,6 +24,6 @@ app.use(passport.initialize())
 app.use('/products', productsRouter)
 app.use('/users', usersRouter)
 
-app.listen(3000, () => {
+app.listen(config.port, () => {
   log.info('Escuchando en el puerto 3000')
 })

@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 const log = require('../../../utils/logger')
 const { validateUser, validateLogin } = require('./users.validate')
 const users = require('../../../database').users
+const config = require('../../../config')
 
 const usersRouter = express.Router()
 
@@ -55,7 +56,7 @@ usersRouter.post('/login', validateLogin, (req, res) => {
   let hashedPassword = users[index].password
   bcrypt.compare(user.password, hashedPassword, (err, matchPassword) => {
     if (matchPassword) {
-      const token = jwt.sign({ id: users[index].id }, 'secret', { expiresIn: 60*60*24 })
+      const token = jwt.sign({ id: users[index].id }, config.jwt.secret, { expiresIn: config.jwt.expiryTime })
       log.info(`Usuario ${user.username} completó autenticación exitosamente`)
       res.status(200).json({ token })
     } else {

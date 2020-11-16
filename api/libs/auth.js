@@ -3,9 +3,10 @@ const log = require('../../utils/logger')
 const users = require('../../database').users
 const bcrypt = require('bcrypt')
 const passportJWT = require('passport-jwt')
+const config = require('../../config')
 
 const jwtOptions = {
-  secretOrKey: 'secret',
+  secretOrKey: config.jwt.secret,
   jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken()
 }
 
