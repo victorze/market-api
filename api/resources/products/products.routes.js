@@ -26,7 +26,7 @@ productsRouter.get('/:id', (req, res) => {
       return res.json(product)
     }
   }
-  res.status(404).send(`El producto con id [${req.params.id}] no existe.`)
+  res.status(404).send(`Producto con id [${req.params.id}] no existe.`)
 })
 
 productsRouter.put('/:id', validateProduct, (req, res) => {
@@ -47,10 +47,8 @@ productsRouter.put('/:id', validateProduct, (req, res) => {
 
 productsRouter.delete('/:id', (req, res) => {
   let index = _.findIndex(products, product => product.id === req.params.id)
-  if (index == -1) {
-    log.warn(
-      `Producto con id [${req.params.id}] no existe. Nada que borrar`
-    )
+  if (index === -1) {
+    log.warn(`Producto con id [${req.params.id}] no existe. Nada que borrar`)
     return res.status(404).send(`Producto con id [${req.params.id}] no existe. Nada que borrar.`)
   }
   let productRemoved = products.splice(index, 1)

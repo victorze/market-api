@@ -4,21 +4,15 @@ const productsRouter = require('./api/resources/products/products.routes')
 const usersRouter = require('./api/resources/users/users.routes')
 const morgan = require('morgan')
 const logger = require('./utils/logger')
+const auth = require('./api/libs/auth')
 
 const passport = require('passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 
-passport.use(new BasicStrategy(
-  (username, password, done) => {
-    if (username.valueOf() === 'victorze' &&  password.valueOf() === 'secret') {
-      return done(null, true)
-    } else {
-      return done(null, false)
-    }
-  }
-))
+passport.use(new BasicStrategy(auth))
 
 const app = express()
+
 app.use(bodyParser.json())
 app.use(morgan('short', {
   stream: {

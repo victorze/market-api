@@ -9,7 +9,7 @@ const blueprintProduct = Joi.object({
 
 module.exports = (req, res, next) => {
   const result = blueprintProduct.validate(req.body, { abortEarly: false, convert: false })
-  if (result.error === undefined) {
+  if (!result.error) {
     next()
   } else {
     let validationErrors = result.error.details.reduce((acc, error) => {
