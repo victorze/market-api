@@ -20,11 +20,6 @@ switch (env) {
     envSettings = require('./dev')
 }
 
-console.log({
-  ...baseSettings,
-  ...envSettings
-})
-
 module.exports = {
   ...baseSettings,
   ...envSettings

@@ -1,14 +1,22 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const morgan = require('morgan')
+const mongoose = require('mongoose')
+
 const productsRouter = require('./api/resources/products/products.routes')
 const usersRouter = require('./api/resources/users/users.routes')
-const morgan = require('morgan')
 const log = require('./utils/logger')
 const authJWT = require('./api/libs/auth')
 const config = require('./config')
 
 const passport = require('passport')
 passport.use(authJWT)
+
+mongoose.connect('mongodb://localhost:27017/market-api')
+mongoose.connection.on('error', () => {
+  log.error('Falló la conexión a mongodb')
+  process.exit(1)
+})
 
 const app = express()
 
