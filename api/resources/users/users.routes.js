@@ -8,40 +8,54 @@ const log = require('../../../utils/logger')
 const { validateUser, validateLogin } = require('./users.validate')
 const users = require('../../../database').users
 const config = require('../../../config')
+const userRepository = require('./user.repository')
+const { has } = require('underscore')
 
 const usersRouter = express.Router()
 
 usersRouter.get('/', (req, res) => {
-  res.json(users)
+  userRepository.getUsers()
+    .then(users => {
+      res.json(users)
+    })
+    .catch(err => {
+      log.error('Error al obtener todos los usuarios', err)
+      res.sendStatus(500)
+    })
 })
 
 usersRouter.post('/', validateUser, (req, res) => {
-  let newUser = req.body
-  let index = _.findIndex(users, user => {
-    return user.username == newUser.username || user.email === newUser.email
-  })
+  const user = req.body
+  userRepository.userExists(user.username, user.email)
+    .then(userExists => {
+      if (userExists) {
+        log.warn('Email o username ya existe en la base de datos')
+        return res.status(409).send('El email o username ya están asociados a una cuenta')
+      }
 
-  if (index !== -1) {
-    log.info('Email o username ya existe en la base de datos')
-    return res.status(409).send('El email o username ya están asociados a una cuenta')
-  }
+      bcrypt.hash(user.password, 10, (err, hashedPassword) => {
+        if (err) {
+          log.error('Ocurrió un error al tratar de obtener el hash de una contraseña', err)
+          return res.status(500).send("Ocurrió un error procesando creación del usuario")
+        }
 
-  bcrypt.hash(newUser.password, 10, (err, hashedPassword) => {
-    if (err) {
-      log.error('Ocurrió un error al tratar de obtener el hash de una contraseña')
-      return res.status(500).send("Ocurrió un error procesando creación del usuario")
-    }
+        userRepository.createUser(user, hashedPassword)
+          .then(user => {
+            log.info("Usuario creado", { ...user, password: hashedPassword })
+            res.status(201).send("Usuario creado exitósamente")
+          })
+          .catch(err => {
+            log.error('Ocurrió un error al tratar de crear un nuevo usuario', user)
+            res.status(500).send('Ocurrio un error al tratar de crear un nuevo usuario.')
+          })
 
-    users.push({
-      username: newUser.username,
-      email: newUser.email,
-      password: hashedPassword,
-      id: uuidv4()
+      })
     })
-
-    log.info("Usuario creado", {...newUser, password: hashedPassword})
-    res.status(201).send("Usuario creado exitósamente")
-  })
+    .catch(err => {
+      log.error(`Ocurrió un error al tratar de verificar si ya existe un usuario
+        [${user.usernmae}] con email [${user.email}]`)
+      res.status(500).send('Ocurrió un error al tratar de crear un nuevo usuario.')
+    })
 })
 
 usersRouter.post('/login', validateLogin, (req, res) => {

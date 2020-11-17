@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Usuario debe tener un email']
   }
+}, {
+  timestamps: true,
+  versionKey: false
 })
 
 module.exports = mongoose.model('user', userSchema)
