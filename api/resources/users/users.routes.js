@@ -13,6 +13,12 @@ const { has } = require('underscore')
 
 const usersRouter = express.Router()
 
+function bodyToLowerCase(req, res, next) {
+  req.body.username && (req.body.username = req.body.username.toLowerCase())
+  req.body.email && (req.body.email = req.body.email.toLowerCase())
+  next()
+}
+
 usersRouter.get('/', (req, res) => {
   userRepository.getUsers()
     .then(users => {
@@ -24,8 +30,9 @@ usersRouter.get('/', (req, res) => {
     })
 })
 
-usersRouter.post('/', validateUser, (req, res) => {
+usersRouter.post('/', [validateUser, bodyToLowerCase], (req, res) => {
   const user = req.body
+
   userRepository.userExists(user.username, user.email)
     .then(userExists => {
       if (userExists) {
@@ -58,8 +65,8 @@ usersRouter.post('/', validateUser, (req, res) => {
     })
 })
 
-usersRouter.post('/login', validateLogin, (req, res) => {
-  user = req.body
+usersRouter.post('/login', [validateLogin, bodyToLowerCase], (req, res) => {
+  const user = req.body
   let index = _.findIndex(users, u => u.username === user.username)
 
   if (index === -1) {
