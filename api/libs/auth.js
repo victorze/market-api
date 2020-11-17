@@ -12,7 +12,6 @@ const jwtOptions = {
 module.exports = new passportJWT.Strategy(jwtOptions, (jwtPayload, next) => {
   userRepository.getUser({ id: jwtPayload.id })
     .then(user => {
-      console.log('in auth', user)
       if (!user) {
         log.info(`JWT token no es válido. Usuario con id ${jwtPayload.id} no existe.`)
         return next(null, false)

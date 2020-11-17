@@ -8,6 +8,7 @@ const usersRouter = require('./api/resources/users/users.routes')
 const log = require('./utils/logger')
 const authJWT = require('./api/libs/auth')
 const config = require('./config')
+const errorHandler = require('./api/libs/errorHandler')
 
 const passport = require('passport')
 passport.use(authJWT)
@@ -31,6 +32,13 @@ app.use(passport.initialize())
 
 app.use('/products', productsRouter)
 app.use('/users', usersRouter)
+
+app.use(errorHandler.processErrorsDB)
+if (config.env === 'prod') {
+  app.use(errorHandler.errorsInProduction)
+} else {
+  app.use(errorHandler.errorsInDevelopment)
+}
 
 app.listen(config.port, () => {
   log.info('Escuchando en el puerto 3000')
