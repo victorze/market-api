@@ -5,6 +5,7 @@ const validateProduct = require('./products.validate')
 const log = require('../../../utils/logger')
 const productRepository = require('./products.repository')
 const processErrors = require('../../libs/errorHandler').processErrors
+const { ProductNotExist, UserIsNotOwner } = require('./products.error')
 
 const jwtAuthenticate = passport.authenticate('jwt', { session: false })
 const productsRouter = express.Router()
@@ -37,7 +38,7 @@ productsRouter.get('/:id', validateId, processErrors((req, res) => {
   return productRepository.getProduct(id)
     .then(product => {
       if (!product) {
-        res.status(404).send(`Producto con id [${req.params.id}] no existe.`)
+        throw new ProductNotExist(`Producto con id [${req.params.id}] no existe.`)
       }
       res.json(product)
     })
@@ -49,13 +50,13 @@ productsRouter.put('/:id', [jwtAuthenticate, validateId, validateProduct], proce
   let product = await productRepository.getProduct(id)
 
   if (!product) {
-    return res.status(404).send(`El producto con id [${id}] no existe.`)
+    throw new ProductNotExist(`El producto con id [${id}] no existe.`)
   }
 
   if (product.owner !== authenticatedUser) {
     log.warn(`Usuario [${authenticatedUser}] no es dueño del producto con id [${id}].
         El dueño real es ${product.owner}. Request no será procesado.`)
-    return res.status(401).send(`No puedes modificar el producto con id ${id}, porque no eres el dueño.`)
+    throw new UserExistsError(`No puedes modificar el producto con id ${id}, porque no eres el dueño.`)
   }
 
   productRepository.updateProduct(id, req.body, authenticatedUser)
@@ -71,7 +72,7 @@ productsRouter.delete('/:id', [jwtAuthenticate, validateId], processErrors(async
 
   if (!product) {
     log.info(`Producto con id [${id}] no existe. Nada que borrar`)
-    return res.status(404).send(`Producto con id [${id}] no existe. Nada que borrar.`)
+    throw new ProductNotExist(`Producto con id [${id}] no existe. Nada que borrar.`)
   }
 
   const authenticatedUser = req.user.username
@@ -79,7 +80,7 @@ productsRouter.delete('/:id', [jwtAuthenticate, validateId], processErrors(async
   if (product.owner !== authenticatedUser) {
     log.warn(`Usuario [${authenticatedUser}] no es dueño del producto con id [${id}].
         El dueño real es ${product.owner}. Request no será procesado.`)
-    return res.status(401).send(`No puedes borrar el producto con id ${id}, porque no eres el dueño.`)
+    throw new UserExistsError(`No puedes borrar el producto con id ${id}, porque no eres el dueño.`)
   }
 
   let deletedProduct = await productRepository.deleteProduct(id)

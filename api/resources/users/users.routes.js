@@ -7,17 +7,9 @@ const { validateUser, validateLogin } = require('./users.validate')
 const config = require('../../../config')
 const userRepository = require('./user.repository')
 const processErrors = require('../../libs/errorHandler').processErrors
+const { UserExistsError, IncorrectCredentials }= require('./users.error')
 
 const usersRouter = express.Router()
-
-class UserExistsError extends Error {
-  constructor(message) {
-    super(message)
-    this.message = message || 'El email o usuario ya están asociados con una cuenta.'
-    this.status = 409
-    this.name = "UsuarioExisteError"
-  }
-}
 
 function bodyToLowerCase(req, res, next) {
   req.body.username && (req.body.username = req.body.username.toLowerCase())
@@ -58,7 +50,7 @@ usersRouter.post('/login', [validateLogin, bodyToLowerCase], processErrors(async
   const registeredUser = await userRepository.getUser({ username: user.username })
   if (!registeredUser) {
     log.info(`Usuario ${user.username} no pudo ser autenticado`)
-    return res.status(400).send('Credenciales incorrectas. Asegúrate que el username y contraseña sean correctas.')
+    throw new IncorrectCredentials()
   }
   const correctPassword = await bcrypt.compare(user.password, registeredUser.password)
 
@@ -68,7 +60,7 @@ usersRouter.post('/login', [validateLogin, bodyToLowerCase], processErrors(async
     res.status(200).json({ token })
   } else {
     log.info(`Usuario ${user.username} no completó autenticación. Contraseña incorrecta`)
-    res.status(400).send('Credenciales incorrectas. Asegúrate que el username y contraseña sean correctas')
+    throw new IncorrectCredentials()
   }
 }))
 
