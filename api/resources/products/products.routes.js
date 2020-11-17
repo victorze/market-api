@@ -56,7 +56,7 @@ productsRouter.put('/:id', [jwtAuthenticate, validateId, validateProduct], proce
   if (product.owner !== authenticatedUser) {
     log.warn(`Usuario [${authenticatedUser}] no es dueño del producto con id [${id}].
         El dueño real es ${product.owner}. Request no será procesado.`)
-    throw new UserExistsError(`No puedes modificar el producto con id ${id}, porque no eres el dueño.`)
+    throw new UserIsNotOwner(`No puedes modificar el producto con id ${id}, porque no eres el dueño.`)
   }
 
   productRepository.updateProduct(id, req.body, authenticatedUser)
@@ -80,7 +80,7 @@ productsRouter.delete('/:id', [jwtAuthenticate, validateId], processErrors(async
   if (product.owner !== authenticatedUser) {
     log.warn(`Usuario [${authenticatedUser}] no es dueño del producto con id [${id}].
         El dueño real es ${product.owner}. Request no será procesado.`)
-    throw new UserExistsError(`No puedes borrar el producto con id ${id}, porque no eres el dueño.`)
+    throw new UserIsNotOwner(`No puedes borrar el producto con id ${id}, porque no eres el dueño.`)
   }
 
   let deletedProduct = await productRepository.deleteProduct(id)

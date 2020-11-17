@@ -40,6 +40,11 @@ if (config.env === 'prod') {
   app.use(errorHandler.errorsInDevelopment)
 }
 
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
   log.info('Escuchando en el puerto 3000')
 })
+
+module.exports = {
+  app,
+  server
+}
