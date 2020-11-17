@@ -4,6 +4,7 @@ const passport = require('passport')
 const validateProduct = require('./products.validate')
 const log = require('../../../utils/logger')
 const productRepository = require('./products.repository')
+const processErrors = require('../../libs/errorHandler').processErrors
 
 const jwtAuthenticate = passport.authenticate('jwt', { session: false })
 const productsRouter = express.Router()
@@ -16,55 +17,36 @@ function validateId(req, res, next) {
   next()
 }
 
-productsRouter.get('/', (req, res) => {
-  productRepository.getProducts()
+productsRouter.get('/', processErrors((req, res) => {
+  return productRepository.getProducts()
     .then(products => {
       res.json(products)
     })
-    .catch(err => {
-      res.status(500).send("Error al leer los productos de la base de datos")
-    })
-})
+}))
 
-productsRouter.post('/', [jwtAuthenticate, validateProduct], (req, res) => {
-  productRepository.createProduct(req.body, req.user.username)
+productsRouter.post('/', [jwtAuthenticate, validateProduct], processErrors((req, res) => {
+  return productRepository.createProduct(req.body, req.user.username)
     .then(product => {
       log.info("Producto agregado a la colección de productos", product.toObject())
       res.status(201).json(product)
     })
-    .catch(err => {
-      log.error("No pudo ser creado el producto", err)
-      res.status(500).send("Ocurrio un error al tratar de crear el producto.")
-    })
-})
+}))
 
-productsRouter.get('/:id', validateId, (req, res) => {
+productsRouter.get('/:id', validateId, processErrors((req, res) => {
   const id = req.params.id
-  productRepository.getProduct(id)
+  return productRepository.getProduct(id)
     .then(product => {
       if (!product) {
         res.status(404).send(`Producto con id [${req.params.id}] no existe.`)
       }
       res.json(product)
     })
-    .catch(err => {
-      log.error(`Ocurrió una excepción al tratar de obtener un producto con [${id}]`, err)
-      res.status(500).send(`Ocurrió un error al tratar de obtener un producto con id [${id}].`)
-    })
-})
+}))
 
-productsRouter.put('/:id', [jwtAuthenticate, validateId, validateProduct], async (req, res) => {
+productsRouter.put('/:id', [jwtAuthenticate, validateId, validateProduct], processErrors(async (req, res) => {
   const id = req.params.id
   const authenticatedUser = req.user.username
-  let product
-
-  try {
-    product = await productRepository.getProduct(id)
-    console.log(product)
-  } catch (err) {
-    log.error(`Ocurrió una excepción al modificar un producto con id [${id}]`, err)
-    return res.status(500).send(`Ocurrió un error al modificar un producto con id [${id}]`)
-  }
+  let product = await productRepository.getProduct(id)
 
   if (!product) {
     return res.status(404).send(`El producto con id [${id}] no existe.`)
@@ -81,22 +63,11 @@ productsRouter.put('/:id', [jwtAuthenticate, validateId, validateProduct], async
       log.info(`Producto con id [${id}] fue reemplazado con un nuevo producto`, product.toObject())
       res.json(product)
     })
-    .catch(err => {
-      log.error(`Excepción al tratar de reemplazar un producto con id [${id}]`, err)
-      res.status(500).send(`Ocurrió un error al reemplazar un producto con id [${id}]`)
-    })
-})
+}))
 
-productsRouter.delete('/:id', [jwtAuthenticate, validateId], async (req, res) => {
+productsRouter.delete('/:id', [jwtAuthenticate, validateId], processErrors(async (req, res) => {
   const id = req.params.id
-  let product
-
-  try {
-    product = await productRepository.getProduct(id)
-  } catch (err) {
-    log.error(`Ocurrió una excepción al borrar un producto con id [${id}]`, err)
-    return res.status(500).send(`Ocurrió un error al borrar un producto con id [${id}]`)
-  }
+  let product = await productRepository.getProduct(id)
 
   if (!product) {
     log.info(`Producto con id [${id}] no existe. Nada que borrar`)
@@ -111,12 +82,9 @@ productsRouter.delete('/:id', [jwtAuthenticate, validateId], async (req, res) =>
     return res.status(401).send(`No puedes borrar el producto con id ${id}, porque no eres el dueño.`)
   }
 
-  try {
-    let deletedProduct = await productRepository.deleteProduct(id)
-    res.json(deletedProduct)
-  } catch (err) {
-    res.status(500).send(`Ocurrió un error al borrar un producto con id [${id}]`)
-  }
-})
+  let deletedProduct = await productRepository.deleteProduct(id)
+  log.info(`Producto con id [${id}] fue borrado`)
+  res.json(deletedProduct)
+}))
 
 module.exports = productsRouter
