@@ -32,7 +32,7 @@ productsRouter.get('/', (req, res) => {
 productsRouter.post('/', [jwtAuthenticate, validateProduct], (req, res) => {
   productRepository.createProduct(req.body, req.user.username)
     .then(product => {
-      log.info("Producto agregado a la colección de productos", product)
+      log.info("Producto agregado a la colección de productos", product.toObject())
       res.status(201).json(product)
     })
     .catch(err => {
@@ -81,7 +81,7 @@ productsRouter.put('/:id', [jwtAuthenticate, validateId, validateProduct], async
 
   productRepository.updateProduct(id, req.body, authenticatedUser)
     .then(product => {
-      log.info(`Producto con id [${id}] fue reemplazado con un nuevo producto`, product)
+      log.info(`Producto con id [${id}] fue reemplazado con un nuevo producto`, product.toObject())
       res.json(product)
     })
     .catch(err => {
