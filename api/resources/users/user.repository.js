@@ -4,6 +4,12 @@ function getUsers() {
   return User.find({})
 }
 
+function getUser({ username: username, id: id }) {
+  if (username) return User.findOne({ username: username })
+  if (id) return User.findById(id)
+  throw new Error('La función getUser fue llamada sin especificar username o id')
+}
+
 function createUser(user, hashedPassword) {
   return new User({
     ...user,
@@ -25,6 +31,7 @@ function userExists(username, email) {
 
 module.exports = {
   getUsers,
+  getUser,
   createUser,
   userExists,
 }

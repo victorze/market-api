@@ -1,11 +1,8 @@
 const express = require('express')
-const _ = require('underscore')
-const uuidv4 = require('uuid/v4')
 const passport = require('passport')
 
 const validateProduct = require('./products.validate')
 const log = require('../../../utils/logger')
-const products = require('../../../database').products
 const productRepository = require('./products.repository')
 
 const jwtAuthenticate = passport.authenticate('jwt', { session: false })
