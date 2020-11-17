@@ -1,9 +1,8 @@
-const _ = require('underscore')
-const log = require('../../utils/logger')
-const users = require('../../database').users
-const bcrypt = require('bcrypt')
 const passportJWT = require('passport-jwt')
+
+const log = require('../../utils/logger')
 const config = require('../../config')
+const userRepository = require('../resources/users/user.repository')
 
 const jwtOptions = {
   secretOrKey: config.jwt.secret,
@@ -11,18 +10,23 @@ const jwtOptions = {
 }
 
 module.exports = new passportJWT.Strategy(jwtOptions, (jwtPayload, next) => {
-  let index = _.findIndex(users, user => user.id === jwtPayload.id)
+  userRepository.getUser({ id: jwtPayload.id })
+    .then(user => {
+      console.log('in auth', user)
+      if (!user) {
+        log.info(`JWT token no es válido. Usuario con id ${jwtPayload.id} no existe.`)
+        return next(null, false)
+      }
 
-  if (index === -1) {
-    log.info(`JWT token no es válido. Usuario con id ${jwtPayload.id} no existe.`)
-    next(null, false)
-  } else {
-    log.info(`Usuario ${users[index].username} suministró un token válido. Autenticación completada.`)
-
-    // El objeto (segundo argumento) se agrega a req.user
-    next(null, {
-      username: users[index].username,
-      id: users[index].id,
+      log.info(`Usuario ${user.username} suministró un token válido. Autenticación completada.`)
+      // El objeto (segundo argumento) se agrega a req.user
+      next(null, {
+        username: user.username,
+        id: user.id,
+      })
     })
-  }
+    .catch(err => {
+      log.error('Ocurrió un error al tratar de validar un token.', err)
+      next(err)
+    })
 })
