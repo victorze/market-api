@@ -6,6 +6,8 @@ const passport = require('passport')
 const validateProduct = require('./products.validate')
 const log = require('../../../utils/logger')
 const products = require('../../../database').products
+const { createProduct } = require('./products.repository')
+
 const jwtAuthenticate = passport.authenticate('jwt', { session: false })
 
 const productsRouter = express.Router()
@@ -15,16 +17,15 @@ productsRouter.get('/', (req, res) => {
 })
 
 productsRouter.post('/', [jwtAuthenticate, validateProduct], (req, res) => {
-  let product = {
-    ...req.body,
-    id: uuidv4(),
-    owner: req.user.username
-  }
-
-  product.id = uuidv4()
-  products.push(product)
-  log.info("Producto agregado a la colección de productos", product)
-  return res.status(201).json(product)
+  createProduct(req.body, req.user.username)
+    .then(product => {
+      log.info("Producto agregado a la colección de productos", product)
+      res.status(201).json(product)
+    })
+    .catch(err => {
+      log.error("No pudo ser creado el producto", err)
+      res.status(500).send("Ocurrio un error al tratar de crear el producto.")
+    })
 })
 
 productsRouter.get('/:id', (req, res) => {
